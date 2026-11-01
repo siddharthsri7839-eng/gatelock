@@ -1,0 +1,29 @@
+# GateLock Pro - Bio S-B251CB Dependencies
+# Install with: pip install -r requirements.txt
+
+# Web Framework & ASGI Server
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+starlette>=0.37.2
+
+# Database & ORM
+SQLAlchemy>=2.0.30
+
+# Data Validation & Serialization
+pydantic>=2.7.1
+
+# Realtime WebSockets & File Handling
+websockets>=17.1
+python-multipart>=0.0.9
+aiofiles>=23.2.1
+Jinja2>=3.1.6
+
+# Biometric Device (S-B251CB / ZKTeco / BioMax / eSSL) Protocol
+pyzk>=0.9
+
+# Image Processing (Logo & Avatars)
+Pillow>=10.3.0
+
+# HTTP Client & Network Utilities
+requests>=2.31.0
+

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GateLock Pro | Bio S-B251CB Gate Controller</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script>
+        window.CURRENT_ROLE = "{{ role }}";
+        window.CURRENT_USER = "{{ account.username }}";
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-blue-600 selection:text-white">
+    <!-- Top Navigation Bar -->
+    <header class="glass-panel sticky top-0 z-40 border-b border-slate-800/80 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Brand & Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-500 via-indigo-500 to-cyan-400 shadow-lg shadow-blue-500/20">
+                    <img src="/logo.jpeg" alt="GateLock Logo" class="w-full h-full object-cover rounded-[14px] bg-slate-900">
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl font-black text-white tracking-tight">GateLock<span class="text-blue-500">Pro</span></span>
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">Bio S-B251CB</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                        <span>Dual Gate Locked Access</span>
+                        <span class="inline-block h-1 w-1 rounded-full bg-slate-600"></span>
+                        <span id="liveClock" class="font-mono text-slate-300">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Role Badge & User Profile -->
+            <div class="flex items-center gap-3">
+                <!-- WebSocket Status Pill -->
+                <div id="wsStatusBadge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs">
+                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-emerald-400 font-semibold text-[11px]">CONNECTING</span>
+                </div>
+
+                <!-- Role Pill -->
+                {% if is_admin %}
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold shadow-lg shadow-emerald-950/50">
+                    <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                    <span>ADMIN (Full Control)</span>
+                </div>
+                {% else %}
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/60 border border-blue-500/40 text-blue-300 text-xs font-bold shadow-lg shadow-blue-950/50">
+                    <i class="fa-solid fa-eye text-blue-400"></i>
+                    <span>OWNER (View-Only)</span>
+                </div>
+                {% endif %}
+
+                <!-- Account & Logout -->
+                <div class="flex items-center gap-2 pl-2 border-l border-slate-800">
+                    <div class="text-right hidden md:block">
+                        <div class="text-xs font-bold text-white">{{ full_name }}</div>
+                        <div class="text-[10px] text-slate-400 capitalize">@{{ account.username }}</div>
+                    </div>
+                    <button onclick="logout()" title="Sign Out" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-rose-950/60 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 text-slate-400 flex items-center justify-center transition-all">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+        <!-- Role Notification Banner -->
+        {% if is_owner %}
+        <div class="p-3.5 rounded-2xl bg-blue-950/40 border border-blue-500/30 flex items-center justify-between text-xs text-blue-300 backdrop-blur-md">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-circle-info text-blue-400 text-sm"></i>
+                <span><strong>Owner Portal:</strong> Live view of gate traffic, movement count, time spent, and logs. Data modification is restricted to Admin.</span>
+            </div>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">READ-ONLY</span>
+        </div>
+        {% else %}
+        <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-300 backdrop-blur-md">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-sm"></i>
+                <span><strong>Admin Portal:</strong> You can remove logs, wipe biometric records on the S-B251CB hardware, add/remove users, and configure IPs.</span>
+            </div>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">FULL ACCESS</span>
+        </div>
+        {% endif %}
+
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <!-- Currently Inside -->
+            <div class="glass-card rounded-2xl p-4 border border-blue-500/20 relative overflow-hidden group">
+                <div class="absolute -right-3 -top-3 w-16 h-16 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all"></div>
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+                    <span>Inside Gate</span>
+                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="statCurrentlyInside" class="text-2xl lg:text-3xl font-black text-white font-mono">0</span>
+                    <span class="text-xs text-emerald-400 font-medium">on-site now</span>
+                </div>
+            </div>
+
+            <!-- Gate 1: Entries Today -->
+            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 relative overflow-hidden group">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+                    <span>Gate 1: In</span>
+                    <i class="fa-solid fa-arrow-right-to-bracket text-emerald-400 text-xs"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="statTodayEntries" class="text-2xl lg:text-3xl font-black text-emerald-400 font-mono">0</span>
+                    <span class="text-xs text-slate-400 font-medium">today</span>
+                </div>
+            </div>
+
+            <!-- Gate 2: Exits Today -->
+            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 relative overflow-hidden group">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+                    <span>Gate 2: Out</span>
+                    <i class="fa-solid fa-arrow-right-from-bracket text-rose-400 text-xs"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="statTodayExits" class="text-2xl lg:text-3xl font-black text-rose-400 font-mono">0</span>
+                    <span class="text-xs text-slate-400 font-medium">today</span>
+                </div>
+            </div>
+
+            <!-- Total Users -->
+            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 relative overflow-hidden group">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+                    <span>Registered Users</span>
+                    <i class="fa-solid fa-users text-blue-400 text-xs"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="statTotalUsers" class="text-2xl lg:text-3xl font-black text-white font-mono">0</span>
+                    <span class="text-xs text-slate-400 font-medium">enrolled</span>
+                </div>
+            </div>
+
+            <!-- Biometric Devices Status -->
+            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 col-span-2 md:col-span-1 relative overflow-hidden group">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+                    <span>Bio S-B251CB</span>
+                    <i class="fa-solid fa-microchip text-indigo-400 text-xs"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="statOnlineDevices" class="text-xl lg:text-2xl font-black text-slate-200 font-mono">2 / 2</span>
+                    <span class="text-[11px] text-slate-400">devices</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Live Punch Floating Alert (Auto-updated via WebSocket) -->
+        <div id="latestPunchBanner" class="hidden"></div>
+
+        <!-- Hardware Status & Live Sync Bar (Admin Only) -->
+        {% if is_admin %}
+        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-3">
+                <span class="font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <i class="fa-solid fa-microchip text-emerald-400"></i>
+                    <span>Live Biometric Gateway:</span>
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
+                    Gate 1 (IN): 192.168.1.165
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
+                    Gate 2 (OUT): 192.168.1.224
+                </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="testDevice('entry_gate'); testDevice('exit_gate');" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-network-wired text-blue-400"></i> Test Ping Both Devices
+                </button>
+                <button onclick="syncDevice('entry_gate'); syncDevice('exit_gate');" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate"></i> Sync Device Logs
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
+            <button id="navBtn-live" onclick="switchTab('live')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30 flex items-center gap-2">
+                <i class="fa-solid fa-tower-broadcast"></i>
+                <span>Live Gate & On-Site</span>
+            </button>
+            <button id="navBtn-monthly" onclick="switchTab('monthly')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-door-open text-amber-400"></i>
+                <span>Gate Open & Close Movement</span>
+            </button>
+            <button id="navBtn-analytics" onclick="switchTab('analytics')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Today's Movements</span>
+            </button>
+            <button id="navBtn-logs" onclick="switchTab('logs')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-list-check"></i>
+                <span>All Access Logs</span>
+            </button>
+            <button id="navBtn-users" onclick="switchTab('users')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-id-card-clip"></i>
+                <span>User Directory</span>
+            </button>
+            <button id="navBtn-devices" onclick="switchTab('devices')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-microchip"></i>
+                <span>Bio S-B251CB Devices</span>
+            </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 1: LIVE GATE STREAM & WHO IS INSIDE -->
+        <!-- ============================================== -->
+        <div id="tabContent-live" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Who Is Currently Inside Roster (2 cols) -->
+                <div class="lg:col-span-2 glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-door-open"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-base">Who Is Currently Inside Gate</h3>
+                                <p class="text-xs text-slate-400">Real-time roster of persons presently on-site with total duration</p>
+                            </div>
+                        </div>
+                        <span id="insideCountBadge" class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold font-mono">0 Active</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                                    <th class="py-3 px-4">Person</th>
+                                    <th class="py-3 px-4">Department / Role</th>
+                                    <th class="py-3 px-4">First In</th>
+                                    <th class="py-3 px-4">Last Punch</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4">Time Spent Inside</th>
+                                </tr>
+                            </thead>
+                            <tbody id="insideRosterTableBody" class="divide-y divide-slate-800/40">
+                                <tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">Loading on-site roster...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Live Gate Activity Timeline (1 col) -->
+                <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-rss text-blue-400 text-sm"></i>
+                            <h3 class="font-bold text-white text-sm">Live Gate Feed</h3>
+                        </div>
+                        <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Stream</span>
+                    </div>
+                    <div id="liveGateFeed" class="space-y-2.5 overflow-y-auto max-h-[420px] pr-1 flex-1">
+                        <!-- Filled dynamically by app.js WebSocket messages -->
+                        <div class="text-center py-10 text-slate-500 text-xs">Waiting for live biometric punches...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 2: MOVEMENT FREQUENCY & DURATION ANALYTICS -->
+        <!-- ============================================== -->
+        <div id="tabContent-analytics" class="tab-content hidden space-y-4">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-chart-user text-blue-400"></i>
+                            <span>Movement Analysis: How Come / How Go / How Many Times</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1">Tracks how many times each person arrived and departed today, current location, and total hours on premises.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="fetchLivePresence('ALL')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">All</button>
+                        <button onclick="fetchLivePresence('INSIDE')" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-xs text-emerald-400 border border-emerald-500/30">Inside Only</button>
+                        <button onclick="fetchLivePresence('OUTSIDE')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-400 border border-slate-700">Outside Only</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                                <th class="py-3 px-4">Person</th>
+                                <th class="py-3 px-4">Department</th>
+                                <th class="py-3 px-4">Current Location</th>
+                                <th class="py-3 px-4">Entered (In)</th>
+                                <th class="py-3 px-4">Exited (Out)</th>
+                                <th class="py-3 px-4">Total Trips</th>
+                                <th class="py-3 px-4">Total Time Inside</th>
+                                <th class="py-3 px-4">Last Punch</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityRosterTableBody" class="divide-y divide-slate-800/40">
+                            <tr><td colspan="8" class="text-center py-8 text-slate-500 text-sm">Loading activity data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 3: GATE ACCESS LOGS (ADMIN CAN REMOVE) -->
+        <!-- ============================================== -->
+        <div id="tabContent-logs" class="tab-content hidden space-y-4">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+                <!-- Filters Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="font-bold text-white text-lg">Biometric Access Logs</h3>
+                        <p class="text-xs text-slate-400" id="totalLogsCount">0 Logs Found</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Search -->
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                            <input type="text" id="logsSearchInput" placeholder="Search person, ID, gate..." 
+                                   class="pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+
+                        <!-- Direction Filter -->
+                        <select id="logsGateFilter" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none">
+                            <option value="ALL">All Directions</option>
+                            <option value="ENTRY">Gate 1 - ENTRY</option>
+                            <option value="EXIT">Gate 2 - EXIT</option>
+                        </select>
+
+                        <!-- Date Filter -->
+                        <input type="date" id="logsDateFilter" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none">
+
+                        <!-- Export CSV -->
+                        <a href="/api/logs/export" class="py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-csv text-emerald-400"></i> Export CSV
+                        </a>
+                    </div>
+                </div>
+
+                <!-- User Search Filter Bar -->
+                <div class="mb-4">
+                    <div class="relative max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                        <input type="text" id="userSearchInput" oninput="filterUsersList(this.value)" placeholder="Search 148+ users by name, ID, role, or dept..." 
+                               class="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                                <th class="py-3 px-4">Log #</th>
+                                <th class="py-3 px-4">Person</th>
+                                <th class="py-3 px-4">Direction</th>
+                                <th class="py-3 px-4">Device</th>
+                                <th class="py-3 px-4">Method</th>
+                                <th class="py-3 px-4">Timestamp</th>
+                                <th class="py-3 px-4">Note</th>
+                                {% if is_admin %}
+                                <th class="py-3 px-4 text-right">Admin Action</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody" class="divide-y divide-slate-800/40">
+                            <tr><td colspan="8" class="text-center py-8 text-slate-500 text-sm">Loading logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 4: USER DIRECTORY & MANAGEMENT -->
+        <!-- ============================================== -->
+        <div id="tabContent-users" class="tab-content hidden space-y-4">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="font-bold text-white text-lg">Registered Users & Bio IDs</h3>
+                        <p class="text-xs text-slate-400" id="totalUsersCount">0 Users</p>
+                    </div>
+                    {% if is_admin %}
+                    <div class="flex items-center gap-2 flex-wrap justify-end">
+                        <!-- Auto-Enroll Machine Pins -->
+                        <button onclick="populateEnrolledPins(1, 120)" 
+                                title="Automatically create directory cards for all machine biometric IDs (e.g. 1 to 120)"
+                                class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Enroll Machine IDs (1-120+)</span>
+                        </button>
+
+                        <!-- Import Machine USB File -->
+                        <input type="file" id="userCsvFileInput" accept=".csv, .txt, .dat, .xls, .xlsx" class="hidden" onchange="handleUploadUserFile(this)">
+                        <button onclick="document.getElementById('userCsvFileInput').click()" title="Import users and real names from USB pen drive file (user.dat, attlog.dat, CSV)"
+                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all">
+                            <i class="fa-brands fa-usb text-amber-400"></i>
+                            <span>Import USB File</span>
+                        </button>
+
+                        <!-- Direct Hardware Sync Gate 1 -->
+                        <button onclick="promptSyncDevice('entry_gate', 'Gate 1 (CP PLUS - 192.168.1.165)')" 
+                                title="Download enrolled users with names directly from Gate 1 hardware"
+                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-cloud-arrow-down text-blue-400"></i>
+                            <span>Sync 165</span>
+                        </button>
+
+                        <!-- Direct Hardware Sync Gate 2 -->
+                        <button onclick="promptSyncDevice('exit_gate', 'Gate 2 (Secureye - 192.168.1.224)')" 
+                                title="Download enrolled users directly from Gate 2 hardware"
+                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-cloud-arrow-down text-emerald-400"></i>
+                            <span>Sync 224</span>
+                        </button>
+
+                        <!-- Clear Non-Machine Data -->
+                        <button onclick="confirmClearAllUsers()" title="Wipe user roster so only freshly synced biometric machine users remain"
+                                class="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-xl flex items-center gap-1 transition-all">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                            <span>Clear Roster</span>
+                        </button>
+                    </div>
+                    {% else %}
+                    <span class="text-xs text-slate-500 italic"><i class="fa-solid fa-lock text-slate-600 mr-1"></i> Admin manages users</span>
+                    {% endif %}
+                </div>
+
+                <!-- User Search Filter Bar -->
+                <div class="mb-4">
+                    <div class="relative max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                        <input type="text" id="userSearchInput" oninput="filterUsersList(this.value)" placeholder="Search 148+ users by name, ID, role, or dept..." 
+                               class="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                                <th class="py-3 px-4">Biometric ID</th>
+                                <th class="py-3 px-4">Full Name</th>
+                                <th class="py-3 px-4">Role Title</th>
+                                <th class="py-3 px-4">Department</th>
+                                <th class="py-3 px-4">Phone</th>
+                                {% if is_admin %}
+                                <th class="py-3 px-4 text-right">Admin Action</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="divide-y divide-slate-800/40">
+                            <tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 5: BIOMETRIC DEVICES (BIO S-B251CB) -->
+        <!-- ============================================== -->
+        <div id="tabContent-devices" class="tab-content hidden space-y-6">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-microchip text-indigo-400"></i>
+                            <span>Dual Biometric Devices (Bio S-B251CB)</span>
+                        </h3>
+                        <p class="text-xs text-slate-400">Controls Gate 1 (Entry) & Gate 2 (Exit) terminals over TCP port 4370 or ADMS push.</p>
+                    </div>
+                </div>
+
+                <div id="devicesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 6: MONTHLY & YEARLY GATE OPEN & CLOSE MOVEMENTS -->
+        <!-- ============================================== -->
+        <div id="tabContent-monthly" class="tab-content hidden space-y-6">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+                <!-- Filters Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-door-open text-amber-400"></i>
+                            <span>Monthly & Yearly Gate Open & Close Movement Report</span>
+                        </h3>
+                        <p class="text-xs text-slate-400">Detailed historical record of when the gate opened and closed: all entries (IN), exits (OUT), gate trip frequency, and duration inside.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Year Selector -->
+                        <div class="flex items-center gap-1.5">
+                            <label class="text-xs text-slate-400 font-semibold uppercase">Year:</label>
+                            <select id="reportYearSelect" onchange="fetchMonthlyReport()" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
+                                <option value="2027">2027</option>
+                                <option value="2026" selected>2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </div>
+
+                        <!-- Month Selector -->
+                        <div class="flex items-center gap-1.5">
+                            <label class="text-xs text-slate-400 font-semibold uppercase">Month:</label>
+                            <select id="reportMonthSelect" onchange="fetchMonthlyReport()" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
+                                <option value="">Full Year (All Months)</option>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11" selected>November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                            <input type="text" id="reportSearchInput" oninput="debounceMonthlyReportSearch()" placeholder="Search person or ID..." 
+                                   class="pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+
+                        <!-- Export Button -->
+                        <button onclick="downloadReportCsv()" class="py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-file-excel"></i> Export Report (CSV)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Summary Stats -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Total IN (Gate Opened)</div>
+                        <div id="reportTotalIn" class="text-2xl font-black text-emerald-400 font-mono">0</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Total OUT (Gate Opened)</div>
+                        <div id="reportTotalOut" class="text-2xl font-black text-rose-400 font-mono">0</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Total Gate Trips</div>
+                        <div id="reportTotalTrips" class="text-2xl font-black text-blue-400 font-mono">0</div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
+                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Active Users Logged</div>
+                        <div id="reportActiveUsers" class="text-2xl font-black text-amber-400 font-mono">0</div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                                <th class="py-3 px-4">Biometric ID</th>
+                                <th class="py-3 px-4">Person Name</th>
+                                <th class="py-3 px-4">Department / Role</th>
+                                <th class="py-3 px-4">Days Present</th>
+                                <th class="py-3 px-4">Total IN (Come)</th>
+                                <th class="py-3 px-4">Total OUT (Go)</th>
+                                <th class="py-3 px-4">Total Trips</th>
+                                <th class="py-3 px-4">Total Time Inside</th>
+                                <th class="py-3 px-4 text-right">In/Out History</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyReportTableBody" class="divide-y divide-slate-800/40">
+                            <tr><td colspan="9" class="text-center py-8 text-slate-500 text-sm">Select month/year to view gate open & close movements...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: User Detailed In/Out History -->
+    <div id="userHistoryModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <div>
+                    <h4 id="historyModalTitle" class="font-bold text-white text-base flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+                        <span>In/Out Movement Timeline</span>
+                    </h4>
+                    <p id="historyModalSubtitle" class="text-xs text-slate-400">Daily coming and going times</p>
+                </div>
+                <button onclick="document.getElementById('userHistoryModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 pr-1">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                            <th class="py-2.5 px-3">Date</th>
+                            <th class="py-2.5 px-3">First In</th>
+                            <th class="py-2.5 px-3">Last Out</th>
+                            <th class="py-2.5 px-3">Total In</th>
+                            <th class="py-2.5 px-3">Total Out</th>
+                            <th class="py-2.5 px-3">Hours Inside</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userHistoryTableBody" class="divide-y divide-slate-800/40 text-xs">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit User (Admin Only) -->
+    <div id="editUserModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <h4 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-blue-400"></i>
+                    <span>Edit User Details</span>
+                </h4>
+                <button onclick="document.getElementById('editUserModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="editUserForm" onsubmit="handleSaveEditUser(event)" class="space-y-4">
+                <input type="hidden" id="editUserId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Biometric Pin / ID</label>
+                    <input type="text" id="editBioId" disabled 
+                           class="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-400 text-sm font-mono cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                    <input type="text" id="editName" required placeholder="Full Name" 
+                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Department</label>
+                        <input type="text" id="editDept" placeholder="Department" 
+                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Role Title</label>
+                        <input type="text" id="editRole" placeholder="Role" 
+                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Phone Number (Optional)</label>
+                    <input type="text" id="editPhone" placeholder="Phone" 
+                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('editUserModal').classList.add('hidden')" 
+                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30">Update User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add User (Admin Only) -->
+    <div id="addUserModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <h4 class="font-bold text-white text-base">Add User to Biometric Gate</h4>
+                <button onclick="document.getElementById('addUserModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="addUserForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Biometric Pin / ID</label>
+                    <input type="text" id="newBioId" required placeholder="e.g. 106" 
+                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                    <input type="text" id="newName" required placeholder="e.g. Karan Roy" 
+                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Department</label>
+                        <input type="text" id="newDept" placeholder="e.g. Operations" 
+                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Role Title</label>
+                        <input type="text" id="newRole" placeholder="e.g. Staff" 
+                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Phone Number (Optional)</label>
+                    <input type="text" id="newPhone" placeholder="+91 98765 00000" 
+                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')" 
+                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Device IP Config (Admin Only) -->
+    <div id="deviceConfigModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <h4 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-amber-400"></i>
+                    <span>Configure Bio S-B251CB</span>
+                </h4>
+                <button onclick="document.getElementById('deviceConfigModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="deviceConfigForm" onsubmit="handleSaveDeviceConfig(event)" class="space-y-4">
+                <input type="hidden" id="cfgDeviceKey">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Device Name</label>
+                    <input type="text" id="cfgDeviceName" required 
+                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">IP Address</label>
+                        <input type="text" id="cfgIp" required placeholder="192.168.1.201" 
+                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Port</label>
+                        <input type="number" id="cfgPort" required value="4370" 
+                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Gate Direction</label>
+                    <select id="cfgGateType" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="ENTRY">ENTRY (Gate 1 - Entry Gate)</option>
+                        <option value="EXIT">EXIT (Gate 2 - Exit Gate)</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('deviceConfigModal').classList.add('hidden')" 
+                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-600/30">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

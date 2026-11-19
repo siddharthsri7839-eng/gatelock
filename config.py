@@ -31,16 +31,16 @@ DEFAULT_DEVICES = [
     {
         "device_key": "entry_gate",
         "name": "Gate 1 - ENTRY (Bio S-B251CB)",
-        "ip_address": "192.168.1.165",
-        "port": 80,
+        "ip_address": "192.168.1.224",
+        "port": 5005,
         "gate_type": "ENTRY",
         "is_enabled": True
     },
     {
         "device_key": "exit_gate",
         "name": "Gate 2 - EXIT (Bio S-B251CB)",
-        "ip_address": "192.168.1.224",
-        "port": 5005,
+        "ip_address": "192.168.1.165",
+        "port": 80,
         "gate_type": "EXIT",
         "is_enabled": True
     }

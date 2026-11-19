@@ -18,7 +18,7 @@ from sqlalchemy import desc
 
 from config import BASE_DIR, DEFAULT_OWNER, DEFAULT_ADMIN
 from database import engine, get_db, Base, SessionLocal
-from models import Account, User, GateLog, DeviceSetting, AdminAuditLog
+from models import Account, User, GateLog, DeviceSetting, AdminAuditLog, CameraSetting, BagViolationLog
 from schemas import (
     LoginRequest, TokenResponse, UserCreate, UserUpdate, UserResponse,
     GatePunchCreate, GateLogResponse, DeviceConfigUpdate, DeviceStatusResponse,
@@ -32,6 +32,9 @@ import importlib
 import biometric_service
 importlib.reload(biometric_service)
 from biometric_service import biometric_manager
+import camera_service
+importlib.reload(camera_service)
+from camera_service import camera_ai_manager
 
 # Ensure tables exist
 Base.metadata.create_all(bind=engine)
@@ -46,6 +49,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Log every request that comes from another machine (e.g. the biometric devices)
+# so it is easy to see whether the devices are reaching this server at all.
+@app.middleware("http")
+async def log_device_requests(request: Request, call_next):
+    client_ip = request.client.host if request.client else ""
+    if client_ip not in ("127.0.0.1", "::1", "testclient") and not request.url.path.startswith("/static"):
+        line = f"{datetime.datetime.now():%Y-%m-%d %H:%M:%S} {client_ip} {request.method} {request.url.path}?{request.url.query}"
+        print(f"[DEVICE/REMOTE REQUEST] {line}")
+        try:
+            with open(BASE_DIR / "device_requests.log", "a", encoding="utf-8") as f:
+                f.write(line + "\n")
+        except Exception:
+            pass
+    return await call_next(request)
 
 # Static and Templates
 STATIC_DIR = BASE_DIR / "static"
@@ -95,6 +113,7 @@ async def async_broadcast(msg: dict):
     await ws_manager.broadcast(msg)
 
 biometric_manager.set_broadcast_callback(async_broadcast)
+camera_ai_manager.set_broadcast_callback(async_broadcast)
 
 # ==========================================
 # STARTUP INITIALIZATION
@@ -105,6 +124,7 @@ def startup_event():
     try:
         init_default_accounts(db)
         biometric_manager.init_devices(db)
+        camera_ai_manager.init_camera_settings(db)
         # Start device listener thread in background for live hardware monitoring
         biometric_manager.start_background_polling()
     finally:
@@ -216,12 +236,23 @@ def get_me(current_user: Account = Depends(get_current_account)):
 # ==========================================
 # LIVE GATE MONITORING & PRESENCE STATS
 # ==========================================
-def calculate_user_daily_presence(user: User, db: Session, today_start: datetime.datetime) -> UserLiveStatus:
-    punches = db.query(GateLog).filter(
+def calculate_user_daily_presence(
+    user: User,
+    db: Session,
+    day_start: Optional[datetime.datetime] = None,
+    day_end: Optional[datetime.datetime] = None,
+    is_today: bool = True
+) -> UserLiveStatus:
+    q = db.query(GateLog).filter(
         GateLog.bio_user_id == user.bio_user_id,
-        GateLog.timestamp >= today_start,
         GateLog.is_deleted == False
-    ).order_by(GateLog.timestamp.asc()).all()
+    )
+    if day_start is not None:
+        q = q.filter(GateLog.timestamp >= day_start)
+    if day_end is not None:
+        q = q.filter(GateLog.timestamp < day_end)
+
+    punches = q.order_by(GateLog.timestamp.asc()).all()
 
     entry_count = sum(1 for p in punches if p.gate_type == "ENTRY")
     exit_count = sum(1 for p in punches if p.gate_type == "EXIT")
@@ -232,26 +263,32 @@ def calculate_user_daily_presence(user: User, db: Session, today_start: datetime
     last_gate = last_punch.gate_type if last_punch else None
     last_punch_time = last_punch.timestamp if last_punch else None
 
-    # Determine status: if last punch today was ENTRY -> INSIDE; else OUTSIDE
+    # Determine status: if last punch in period was ENTRY -> INSIDE; else OUTSIDE
     current_status = "INSIDE" if (last_gate == "ENTRY") else "OUTSIDE"
 
-    # Calculate total duration spent inside today
+    # Calculate total duration spent inside
     total_inside_seconds = 0
     current_entry_time = None
     for p in punches:
         if p.gate_type == "ENTRY":
-            current_entry_time = p.timestamp
+            if current_entry_time is None:
+                current_entry_time = p.timestamp
         elif p.gate_type == "EXIT" and current_entry_time:
             diff = (p.timestamp - current_entry_time).total_seconds()
             if diff > 0:
                 total_inside_seconds += diff
             current_entry_time = None
-    
-    # If still inside right now, add difference from last entry to now
+
+    # If still inside at the end of punches
     if current_entry_time and current_status == "INSIDE":
-        now_diff = (datetime.datetime.utcnow() - current_entry_time).total_seconds()
-        if now_diff > 0:
-            total_inside_seconds += now_diff
+        now_local = datetime.datetime.now()
+        if is_today:
+            ref_time = max(now_local, last_punch_time) if last_punch_time else now_local
+            now_diff = (ref_time - current_entry_time).total_seconds()
+            if now_diff > 0:
+                total_inside_seconds += now_diff
+        elif last_punch_time and last_punch_time > current_entry_time:
+            total_inside_seconds += (last_punch_time - current_entry_time).total_seconds()
 
     # Format time spent string
     hours = int(total_inside_seconds // 3600)
@@ -277,16 +314,35 @@ def calculate_user_daily_presence(user: User, db: Session, today_start: datetime
 @app.get("/api/presence/live", response_model=List[UserLiveStatus])
 def get_live_presence(
     status_filter: Optional[str] = None, # 'INSIDE', 'OUTSIDE', or None
+    date: Optional[str] = None,          # 'YYYY-MM-DD' or 'ALL' or None (today)
     current_user: Account = Depends(require_any),
     db: Session = Depends(get_db)
 ):
     """Accessible by both Owner and Admin: shows live presence, movement frequencies, and time spent."""
-    today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    now_local = datetime.datetime.now()
+    today_str = now_local.strftime("%Y-%m-%d")
+    day_start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_end = day_start + datetime.timedelta(days=1)
+    is_today = True
+
+    if date:
+        if date.upper() == "ALL":
+            day_start = None
+            day_end = None
+            is_today = True
+        else:
+            try:
+                day_start = datetime.datetime.strptime(date, "%Y-%m-%d")
+                day_end = day_start + datetime.timedelta(days=1)
+                is_today = (date == today_str)
+            except Exception:
+                pass
+
     users = db.query(User).filter(User.is_active == True).order_by(User.name.asc()).all()
     
     result = []
     for u in users:
-        pres = calculate_user_daily_presence(u, db, today_start)
+        pres = calculate_user_daily_presence(u, db, day_start, day_end, is_today=is_today)
         if status_filter:
             if status_filter.upper() == pres.current_status:
                 result.append(pres)
@@ -298,13 +354,31 @@ def get_live_presence(
     return result
 
 @app.get("/api/stats/summary")
-def get_stats_summary(current_user: Account = Depends(require_any), db: Session = Depends(get_db)):
-    today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    today_logs = db.query(GateLog).filter(
-        GateLog.timestamp >= today_start,
-        GateLog.is_deleted == False
-    ).all()
+def get_stats_summary(
+    date: Optional[str] = None,
+    current_user: Account = Depends(require_any),
+    db: Session = Depends(get_db)
+):
+    now_local = datetime.datetime.now()
+    day_start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_end = day_start + datetime.timedelta(days=1)
+
+    if date and date.upper() == "ALL":
+        day_start = None
+        day_end = None
+    elif date:
+        try:
+            day_start = datetime.datetime.strptime(date, "%Y-%m-%d")
+            day_end = day_start + datetime.timedelta(days=1)
+        except Exception:
+            pass
+
+    q = db.query(GateLog).filter(GateLog.is_deleted == False)
+    if day_start is not None:
+        q = q.filter(GateLog.timestamp >= day_start)
+    if day_end is not None:
+        q = q.filter(GateLog.timestamp < day_end)
+    today_logs = q.all()
 
     today_entries = sum(1 for l in today_logs if l.gate_type == "ENTRY")
     today_exits = sum(1 for l in today_logs if l.gate_type == "EXIT")
@@ -461,21 +535,32 @@ def export_logs_csv(current_user: Account = Depends(require_any), db: Session = 
 # ==========================================
 @app.get("/api/reports/monthly")
 def get_monthly_report(
-    year: int = Query(default=datetime.datetime.utcnow().year),
+    year: int = Query(default=datetime.datetime.now().year),
     month: Optional[str] = Query(default=None),
+    date: Optional[str] = Query(default=None),
     bio_user_id: Optional[str] = None,
     search: Optional[str] = None,
     current_user: Account = Depends(require_any),
     db: Session = Depends(get_db)
 ):
-    """View all months/years: when gate opened/closed, when each person entered (IN), exited (OUT), total gate operations, and duration inside."""
+    """View all months/years or specific date: when gate opened/closed, when each person entered (IN), exited (OUT), total gate operations, and duration inside."""
     parsed_month: Optional[int] = None
     if month is not None and str(month).strip().isdigit():
         val = int(str(month).strip())
         if 1 <= val <= 12:
             parsed_month = val
 
-    if parsed_month:
+    if date and date.strip() and date.strip().upper() != "ALL":
+        try:
+            start_date = datetime.datetime.strptime(date.strip(), "%Y-%m-%d")
+            end_date = start_date + datetime.timedelta(days=1)
+        except Exception:
+            start_date = datetime.datetime(year, 1, 1, 0, 0, 0)
+            end_date = datetime.datetime(year + 1, 1, 1, 0, 0, 0)
+    elif date and date.strip().upper() == "ALL":
+        start_date = datetime.datetime(2000, 1, 1, 0, 0, 0)
+        end_date = datetime.datetime(2100, 1, 1, 0, 0, 0)
+    elif parsed_month:
         start_date = datetime.datetime(year, parsed_month, 1, 0, 0, 0)
         if parsed_month == 12:
             end_date = datetime.datetime(year + 1, 1, 1, 0, 0, 0)
@@ -553,18 +638,29 @@ def get_monthly_report(
             d["total_trips"] = d["in_count"] + d["out_count"]
 
         # Calculate time inside for each day
+        today_local_str = datetime.datetime.now().strftime("%Y-%m-%d")
         for day_str, d in daily_breakdown.items():
             day_punches = [l for l in pulled_logs if l.timestamp.strftime("%Y-%m-%d") == day_str]
             curr_in = None
             day_secs = 0
             for p in day_punches:
                 if p.gate_type == "ENTRY":
-                    curr_in = p.timestamp
+                    if curr_in is None:
+                        curr_in = p.timestamp
                 elif p.gate_type == "EXIT" and curr_in:
                     diff = (p.timestamp - curr_in).total_seconds()
                     if diff > 0:
                         day_secs += diff
                     curr_in = None
+            if curr_in is not None:
+                if day_str == today_local_str:
+                    now_local = datetime.datetime.now()
+                    ref_t = max(now_local, day_punches[-1].timestamp)
+                    diff = (ref_t - curr_in).total_seconds()
+                    if diff > 0:
+                        day_secs += diff
+                elif len(day_punches) > 1 and day_punches[-1].timestamp > curr_in:
+                    day_secs += (day_punches[-1].timestamp - curr_in).total_seconds()
             total_seconds += day_secs
             hours = int(day_secs // 3600)
             mins = int((day_secs % 3600) // 60)
@@ -1043,10 +1139,10 @@ async def iclock_cdata_post(request: Request, db: Session = Depends(get_db)):
     # Auto-detect gate based on IP
     default_gate = "ENTRY"
     default_dev_key = "entry_gate"
-    if "224" in client_ip:
+    if "165" in client_ip:
         default_gate = "EXIT"
         default_dev_key = "exit_gate"
-    elif "165" in client_ip:
+    elif "224" in client_ip:
         default_gate = "ENTRY"
         default_dev_key = "entry_gate"
 
@@ -1094,7 +1190,7 @@ async def api_push_punch(request: Request, db: Session = Depends(get_db)):
         bio_pin = str(data.get("pin") or data.get("user_id") or data.get("bio_user_id")).strip()
         gate_type = data.get("gate_type")
         if not gate_type:
-            gate_type = "EXIT" if "224" in client_ip else "ENTRY"
+            gate_type = "EXIT" if "165" in client_ip else "ENTRY"
         dev_key = "exit_gate" if gate_type.upper() == "EXIT" else "entry_gate"
 
         log = biometric_manager.record_punch(
@@ -1108,6 +1204,258 @@ async def api_push_punch(request: Request, db: Session = Depends(get_db)):
         return {"success": True, "log_id": log.id, "user": log.user_name, "gate": log.gate_type}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+# ==========================================
+# AI IP CAMERA & BAG POLICY DETECTION CENTER
+# ==========================================
+@app.get("/api/camera/config")
+def get_camera_config(db: Session = Depends(get_db)):
+    cam = camera_ai_manager.init_camera_settings(db)
+    matched = camera_ai_manager.get_recent_gate_user(db)
+    return {
+        "id": cam.id,
+        "name": cam.name,
+        "ip_address": cam.ip_address,
+        "port": cam.port,
+        "username": cam.username,
+        "password": cam.password,
+        "brand": cam.brand,
+        "rtsp_url": cam.rtsp_url or "",
+        "gate_type": cam.gate_type,
+        "is_enabled": cam.is_enabled,
+        "last_status": cam.last_status,
+        "stream_active": camera_ai_manager.stream_active,
+        "scanner_status": camera_ai_manager.current_status,
+        "scanner_error": camera_ai_manager.current_error,
+        "fps": camera_ai_manager.fps,
+        "latest_detections": camera_ai_manager.latest_detections,
+        "recent_gate_user": matched
+    }
+
+@app.put("/api/camera/config")
+def update_camera_config(
+    payload: dict,
+    db: Session = Depends(get_db)
+):
+    cam = camera_ai_manager.init_camera_settings(db)
+    if "name" in payload:
+        cam.name = str(payload["name"]).strip() or "Gate 1 Entry IP Camera"
+    if "ip_address" in payload:
+        cam.ip_address = str(payload["ip_address"]).strip()
+    if "port" in payload:
+        try:
+            cam.port = int(payload["port"])
+        except Exception:
+            cam.port = 554
+    if "username" in payload:
+        cam.username = str(payload["username"]).strip()
+    if "password" in payload:
+        cam.password = str(payload["password"])
+    if "brand" in payload:
+        cam.brand = str(payload["brand"]).strip()
+    if "rtsp_url" in payload:
+        cam.rtsp_url = str(payload["rtsp_url"]).strip()
+    if "gate_type" in payload:
+        cam.gate_type = str(payload["gate_type"]).strip()
+    db.commit()
+    db.refresh(cam)
+
+    # Restart AI stream with updated camera settings
+    camera_ai_manager.stop_stream()
+    camera_ai_manager.start_stream()
+    return {"success": True, "message": f"Connected camera settings saved ({cam.ip_address}:{cam.port}) and AI scanner started."}
+
+@app.get("/api/camera/discover")
+def discover_lan_cameras():
+    cameras = camera_ai_manager.scan_lan_cameras("192.168.1.")
+    return {"total": len(cameras), "cameras": cameras}
+
+@app.post("/api/camera/toggle")
+def toggle_camera_stream(
+    enable: bool = Query(True),
+    db: Session = Depends(get_db)
+):
+    camera_ai_manager.init_camera_settings(db)
+    if enable:
+        camera_ai_manager.start_stream()
+    else:
+        camera_ai_manager.stop_stream()
+    return {"stream_active": camera_ai_manager.stream_active, "status": camera_ai_manager.current_status}
+
+@app.get("/api/camera/snapshot")
+def get_camera_snapshot(db: Session = Depends(get_db)):
+    cam = camera_ai_manager.init_camera_settings(db)
+    jpeg_bytes = camera_ai_manager.get_preview_jpeg(cam)
+    return Response(content=jpeg_bytes, media_type="image/jpeg")
+
+@app.get("/api/camera/mjpeg")
+def get_camera_mjpeg(db: Session = Depends(get_db)):
+    cam = camera_ai_manager.init_camera_settings(db)
+
+    def frame_generator():
+        while True:
+            jpeg_bytes = camera_ai_manager.get_preview_jpeg(cam)
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + jpeg_bytes + b"\r\n"
+            )
+            time.sleep(0.15)
+
+    import time
+    return StreamingResponse(frame_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+@app.post("/api/camera/test-violation")
+def trigger_test_bag_violation(
+    bag_type: str = Query("Backpack / Office Bag"),
+    db: Session = Depends(get_db)
+):
+    v = camera_ai_manager.trigger_test_bag_violation(db, bag_type=bag_type)
+    return {
+        "success": True,
+        "message": f"Bag Violation recorded for {v.user_name} (ID: {v.bio_user_id}) carrying {v.bag_type}!",
+        "violation": {
+            "id": v.id,
+            "bio_user_id": v.bio_user_id,
+            "user_name": v.user_name,
+            "department": v.department,
+            "camera_name": v.camera_name,
+            "camera_ip": v.camera_ip,
+            "bag_type": v.bag_type,
+            "confidence": v.confidence,
+            "detected_objects": v.detected_objects,
+            "snapshot_url": v.snapshot_url,
+            "clip_url": v.clip_url,
+            "timestamp": v.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "note": v.note
+        }
+    }
+
+@app.post("/api/camera/scan-frame")
+async def scan_uploaded_camera_frame(
+    file: UploadFile = File(...),
+    record_if_bag: bool = Query(True),
+    db: Session = Depends(get_db)
+):
+    import cv2
+    import numpy as np
+
+    raw = await file.read()
+    arr = np.frombuffer(raw, dtype=np.uint8)
+    frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if frame is None:
+        raise HTTPException(status_code=400, detail="Could not decode image frame")
+
+    cam = camera_ai_manager.init_camera_settings(db)
+    dets = camera_ai_manager.detect_objects_in_frame(frame, conf_thresh=0.25)
+    matched = camera_ai_manager.get_recent_gate_user(db)
+    ann = camera_ai_manager.annotate_frame(frame, dets, matched, cam.name)
+    ok_jpg, buf = cv2.imencode(".jpg", ann, [int(cv2.IMWRITE_JPEG_QUALITY), 88])
+    if ok_jpg:
+        camera_ai_manager.latest_annotated_jpeg = buf.tobytes()
+    camera_ai_manager.latest_detections = dets
+    camera_ai_manager.frame_buffer.append(ann)
+
+    has_bag = any(d["is_bag"] for d in dets)
+    violation_data = None
+    if has_bag and record_if_bag:
+        v = camera_ai_manager.save_violation_evidence(
+            annotated_frame=ann,
+            frames_clip=list(camera_ai_manager.frame_buffer),
+            detections=dets,
+            cam=cam,
+            db=db
+        )
+        violation_data = {
+            "id": v.id,
+            "user_name": v.user_name,
+            "bio_user_id": v.bio_user_id,
+            "bag_type": v.bag_type,
+            "snapshot_url": v.snapshot_url,
+            "clip_url": v.clip_url
+        }
+
+    return {
+        "detections": dets,
+        "has_bag_violation": has_bag,
+        "matched_user": matched,
+        "violation": violation_data
+    }
+
+@app.get("/api/camera/violations")
+def get_bag_violations(
+    date: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    q = db.query(BagViolationLog).filter(BagViolationLog.is_deleted == False)
+    if date and date.upper() != "ALL":
+        try:
+            start_dt = datetime.datetime.strptime(date, "%Y-%m-%d")
+            end_dt = start_dt + datetime.timedelta(days=1)
+            q = q.filter(BagViolationLog.timestamp >= start_dt, BagViolationLog.timestamp < end_dt)
+        except Exception:
+            pass
+    if search:
+        q = q.filter(
+            (BagViolationLog.user_name.ilike(f"%{search}%")) |
+            (BagViolationLog.bio_user_id.ilike(f"%{search}%")) |
+            (BagViolationLog.bag_type.ilike(f"%{search}%"))
+        )
+
+    total = q.count()
+    items = q.order_by(desc(BagViolationLog.timestamp)).limit(limit).all()
+    return {
+        "total": total,
+        "violations": [
+            {
+                "id": v.id,
+                "bio_user_id": v.bio_user_id,
+                "user_name": v.user_name,
+                "department": v.department,
+                "camera_name": v.camera_name,
+                "camera_ip": v.camera_ip,
+                "bag_type": v.bag_type,
+                "confidence": v.confidence,
+                "detected_objects": v.detected_objects,
+                "snapshot_url": v.snapshot_url,
+                "clip_url": v.clip_url,
+                "timestamp": v.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "note": v.note
+            }
+            for v in items
+        ]
+    }
+
+@app.put("/api/camera/violations/{violation_id}")
+def update_bag_violation(
+    violation_id: int,
+    payload: dict,
+    db: Session = Depends(get_db)
+):
+    v = db.query(BagViolationLog).filter(BagViolationLog.id == violation_id, BagViolationLog.is_deleted == False).first()
+    if not v:
+        raise HTTPException(status_code=404, detail="Violation record not found")
+    if "user_name" in payload and str(payload["user_name"]).strip():
+        v.user_name = str(payload["user_name"]).strip()
+    if "bio_user_id" in payload and str(payload["bio_user_id"]).strip():
+        v.bio_user_id = str(payload["bio_user_id"]).strip()
+    if "note" in payload:
+        v.note = str(payload["note"]).strip()
+    db.commit()
+    return {"success": True, "message": f"Updated bag violation #{violation_id} ({v.user_name})"}
+
+@app.delete("/api/camera/violations/{violation_id}")
+def delete_bag_violation(
+    violation_id: int,
+    db: Session = Depends(get_db)
+):
+    v = db.query(BagViolationLog).filter(BagViolationLog.id == violation_id, BagViolationLog.is_deleted == False).first()
+    if not v:
+        raise HTTPException(status_code=404, detail="Violation record not found")
+    v.is_deleted = True
+    db.commit()
+    return {"success": True, "message": f"Bag violation #{violation_id} deleted"}
 
 # ==========================================
 # WEBSOCKET REAL-TIME LIVE HUB

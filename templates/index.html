@@ -7,30 +7,30 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/styles.css?v=20261104">
     <script>
         window.CURRENT_ROLE = "{{ role }}";
         window.CURRENT_USER = "{{ account.username }}";
     </script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-blue-600 selection:text-white">
+<body class="bg-[#f0f4f9] text-slate-800 min-h-screen selection:bg-blue-600 selection:text-white">
     <!-- Top Navigation Bar -->
-    <header class="glass-panel sticky top-0 z-40 border-b border-slate-800/80 px-4 lg:px-8 py-3">
+    <header class="glass-panel sticky top-0 z-40 border-b border-slate-200/90 px-4 lg:px-8 py-3 bg-white/95 backdrop-blur-md shadow-sm">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <!-- Brand & Logo -->
             <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-500 via-indigo-500 to-cyan-400 shadow-lg shadow-blue-500/20">
-                    <img src="/logo.jpeg" alt="GateLock Logo" class="w-full h-full object-cover rounded-[14px] bg-slate-900">
+                <div class="w-11 h-11 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 shadow-md shadow-blue-500/20">
+                    <img src="/logo.jpeg" alt="GateLock Logo" class="w-full h-full object-cover rounded-[14px] bg-white">
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xl font-black text-white tracking-tight">GateLock<span class="text-blue-500">Pro</span></span>
-                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">Bio S-B251CB</span>
+                        <span class="text-xl font-black text-slate-900 tracking-tight">GateLock<span class="text-blue-600">Pro</span></span>
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-mono">Bio S-B251CB</span>
                     </div>
-                    <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                    <div class="text-[11px] text-slate-500 flex items-center gap-2">
                         <span>Dual Gate Locked Access</span>
-                        <span class="inline-block h-1 w-1 rounded-full bg-slate-600"></span>
-                        <span id="liveClock" class="font-mono text-slate-300">--:--:--</span>
+                        <span class="inline-block h-1 w-1 rounded-full bg-slate-400"></span>
+                        <span id="liveClock" class="font-mono text-slate-700 font-semibold bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">--:--:--</span>
                     </div>
                 </div>
             </div>
@@ -38,31 +38,31 @@
             <!-- Role Badge & User Profile -->
             <div class="flex items-center gap-3">
                 <!-- WebSocket Status Pill -->
-                <div id="wsStatusBadge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-xs">
-                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-emerald-400 font-semibold text-[11px]">CONNECTING</span>
+                <div id="wsStatusBadge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs shadow-sm">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-emerald-700 font-semibold text-[11px]">CONNECTING</span>
                 </div>
 
                 <!-- Role Pill -->
                 {% if is_admin %}
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold shadow-lg shadow-emerald-950/50">
-                    <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-sm">
+                    <i class="fa-solid fa-shield-halved text-emerald-600"></i>
                     <span>ADMIN (Full Control)</span>
                 </div>
                 {% else %}
-                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/60 border border-blue-500/40 text-blue-300 text-xs font-bold shadow-lg shadow-blue-950/50">
-                    <i class="fa-solid fa-eye text-blue-400"></i>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold shadow-sm">
+                    <i class="fa-solid fa-eye text-blue-600"></i>
                     <span>OWNER (View-Only)</span>
                 </div>
                 {% endif %}
 
                 <!-- Account & Logout -->
-                <div class="flex items-center gap-2 pl-2 border-l border-slate-800">
+                <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
                     <div class="text-right hidden md:block">
-                        <div class="text-xs font-bold text-white">{{ full_name }}</div>
-                        <div class="text-[10px] text-slate-400 capitalize">@{{ account.username }}</div>
+                        <div class="text-xs font-bold text-slate-900">{{ full_name }}</div>
+                        <div class="text-[10px] text-slate-500 capitalize">@{{ account.username }}</div>
                     </div>
-                    <button onclick="logout()" title="Sign Out" class="w-9 h-9 rounded-xl bg-slate-900 hover:bg-rose-950/60 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 text-slate-400 flex items-center justify-center transition-all">
+                    <button onclick="logout()" title="Sign Out" class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-300 text-slate-600 flex items-center justify-center transition-all shadow-sm">
                         <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
                     </button>
                 </div>
@@ -75,83 +75,83 @@
 
         <!-- Role Notification Banner -->
         {% if is_owner %}
-        <div class="p-3.5 rounded-2xl bg-blue-950/40 border border-blue-500/30 flex items-center justify-between text-xs text-blue-300 backdrop-blur-md">
+        <div class="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-between text-xs text-blue-900 shadow-sm">
             <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-circle-info text-blue-400 text-sm"></i>
+                <i class="fa-solid fa-circle-info text-blue-600 text-sm"></i>
                 <span><strong>Owner Portal:</strong> Live view of gate traffic, movement count, time spent, and logs. Data modification is restricted to Admin.</span>
             </div>
-            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">READ-ONLY</span>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200 font-bold">READ-ONLY</span>
         </div>
         {% else %}
-        <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-300 backdrop-blur-md">
+        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 shadow-sm">
             <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-shield-halved text-emerald-400 text-sm"></i>
+                <i class="fa-solid fa-shield-halved text-emerald-600 text-sm"></i>
                 <span><strong>Admin Portal:</strong> You can remove logs, wipe biometric records on the S-B251CB hardware, add/remove users, and configure IPs.</span>
             </div>
-            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">FULL ACCESS</span>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold">FULL ACCESS</span>
         </div>
         {% endif %}
 
         <!-- KPI Summary Cards -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <!-- Currently Inside -->
-            <div class="glass-card rounded-2xl p-4 border border-blue-500/20 relative overflow-hidden group">
+            <div class="glass-card rounded-2xl p-4 border border-blue-200/80 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
                 <div class="absolute -right-3 -top-3 w-16 h-16 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all"></div>
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+                <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
                     <span>Inside Gate</span>
-                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="statCurrentlyInside" class="text-2xl lg:text-3xl font-black text-white font-mono">0</span>
-                    <span class="text-xs text-emerald-400 font-medium">on-site now</span>
+                    <span id="statCurrentlyInside" class="text-2xl lg:text-3xl font-black text-slate-900 font-mono">0</span>
+                    <span class="text-xs text-emerald-600 font-bold">on-site now</span>
                 </div>
             </div>
 
             <!-- Gate 1: Entries Today -->
-            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 relative overflow-hidden group">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+            <div class="glass-card rounded-2xl p-4 border border-slate-200/90 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
                     <span>Gate 1: In</span>
-                    <i class="fa-solid fa-arrow-right-to-bracket text-emerald-400 text-xs"></i>
+                    <i class="fa-solid fa-arrow-right-to-bracket text-emerald-600 text-xs"></i>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="statTodayEntries" class="text-2xl lg:text-3xl font-black text-emerald-400 font-mono">0</span>
+                    <span id="statTodayEntries" class="text-2xl lg:text-3xl font-black text-emerald-600 font-mono">0</span>
                     <span class="text-xs text-slate-400 font-medium">today</span>
                 </div>
             </div>
 
             <!-- Gate 2: Exits Today -->
-            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 relative overflow-hidden group">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+            <div class="glass-card rounded-2xl p-4 border border-slate-200/90 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
                     <span>Gate 2: Out</span>
-                    <i class="fa-solid fa-arrow-right-from-bracket text-rose-400 text-xs"></i>
+                    <i class="fa-solid fa-arrow-right-from-bracket text-rose-600 text-xs"></i>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="statTodayExits" class="text-2xl lg:text-3xl font-black text-rose-400 font-mono">0</span>
+                    <span id="statTodayExits" class="text-2xl lg:text-3xl font-black text-rose-600 font-mono">0</span>
                     <span class="text-xs text-slate-400 font-medium">today</span>
                 </div>
             </div>
 
             <!-- Total Users -->
-            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 relative overflow-hidden group">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
+            <div class="glass-card rounded-2xl p-4 border border-slate-200/90 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
                     <span>Registered Users</span>
-                    <i class="fa-solid fa-users text-blue-400 text-xs"></i>
+                    <i class="fa-solid fa-users text-blue-600 text-xs"></i>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="statTotalUsers" class="text-2xl lg:text-3xl font-black text-white font-mono">0</span>
+                    <span id="statTotalUsers" class="text-2xl lg:text-3xl font-black text-blue-600 font-mono">0</span>
                     <span class="text-xs text-slate-400 font-medium">enrolled</span>
                 </div>
             </div>
 
             <!-- Biometric Devices Status -->
-            <div class="glass-card rounded-2xl p-4 border border-slate-800/80 col-span-2 md:col-span-1 relative overflow-hidden group">
-                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold mb-2">
-                    <span>Bio S-B251CB</span>
-                    <i class="fa-solid fa-microchip text-indigo-400 text-xs"></i>
+            <div class="glass-card rounded-2xl p-4 border border-slate-200/90 col-span-2 md:col-span-1 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-2">
+                    <span>Bio Devices</span>
+                    <i class="fa-solid fa-microchip text-indigo-600 text-xs"></i>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="statOnlineDevices" class="text-xl lg:text-2xl font-black text-slate-200 font-mono">2 / 2</span>
-                    <span class="text-[11px] text-slate-400">devices</span>
+                    <span id="statOnlineDevices" class="text-xl lg:text-2xl font-black text-slate-900 font-mono">2 / 2</span>
+                    <span class="text-[11px] text-slate-500">active</span>
                 </div>
             </div>
         </div>
@@ -161,24 +161,24 @@
 
         <!-- Hardware Status & Live Sync Bar (Admin Only) -->
         {% if is_admin %}
-        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="p-4 rounded-2xl bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
             <div class="flex items-center gap-3">
-                <span class="font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <i class="fa-solid fa-microchip text-emerald-400"></i>
+                <span class="font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-microchip text-blue-600"></i>
                     <span>Live Biometric Gateway:</span>
                 </span>
-                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
-                    Gate 1 (IN): 192.168.1.165
+                <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-mono font-bold">
+                    Gate 1 (IN): 192.168.1.224
                 </span>
-                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
-                    Gate 2 (OUT): 192.168.1.224
+                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono font-bold">
+                    Gate 2 (OUT): 192.168.1.165
                 </span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <button onclick="testDevice('entry_gate'); testDevice('exit_gate');" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5 transition-all">
-                    <i class="fa-solid fa-network-wired text-blue-400"></i> Test Ping Both Devices
+                <button onclick="testDevice('entry_gate'); testDevice('exit_gate');" class="px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold flex items-center gap-1.5 transition-all shadow-sm">
+                    <i class="fa-solid fa-network-wired text-blue-600"></i> Test Ping Devices
                 </button>
-                <button onclick="syncDevice('entry_gate'); syncDevice('exit_gate');" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md flex items-center gap-1.5">
+                <button onclick="syncDevice('entry_gate'); syncDevice('exit_gate');" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm shadow-blue-500/20 flex items-center gap-1.5">
                     <i class="fa-solid fa-arrows-rotate"></i> Sync Device Logs
                 </button>
             </div>
@@ -186,30 +186,34 @@
         {% endif %}
 
         <!-- Navigation Tabs -->
-        <div class="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
-            <button id="navBtn-live" onclick="switchTab('live')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30 flex items-center gap-2">
+        <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+            <button id="navBtn-live" onclick="switchTab('live')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-blue-600 text-white shadow-md shadow-blue-500/25 border border-blue-600 flex items-center gap-2">
                 <i class="fa-solid fa-tower-broadcast"></i>
                 <span>Live Gate & On-Site</span>
             </button>
-            <button id="navBtn-monthly" onclick="switchTab('monthly')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-door-open text-amber-400"></i>
+            <button id="navBtn-monthly" onclick="switchTab('monthly')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-door-open text-blue-600"></i>
                 <span>Gate Open & Close Movement</span>
             </button>
-            <button id="navBtn-analytics" onclick="switchTab('analytics')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-chart-line"></i>
+            <button id="navBtn-analytics" onclick="switchTab('analytics')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-indigo-600"></i>
                 <span>Today's Movements</span>
             </button>
-            <button id="navBtn-logs" onclick="switchTab('logs')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-list-check"></i>
+            <button id="navBtn-logs" onclick="switchTab('logs')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-slate-500"></i>
                 <span>All Access Logs</span>
             </button>
-            <button id="navBtn-users" onclick="switchTab('users')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-id-card-clip"></i>
+            <button id="navBtn-users" onclick="switchTab('users')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-id-card-clip text-blue-600"></i>
                 <span>User Directory</span>
             </button>
-            <button id="navBtn-devices" onclick="switchTab('devices')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all text-slate-400 hover:bg-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-microchip"></i>
-                <span>Bio S-B251CB Devices</span>
+            <button id="navBtn-devices" onclick="switchTab('devices')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-microchip text-indigo-600"></i>
+                <span>Biometric Devices</span>
+            </button>
+            <button id="navBtn-camera" onclick="switchTab('camera')" class="nav-btn px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-video text-rose-600"></i>
+                <span>AI Camera & Bag Scan</span>
             </button>
         </div>
 
@@ -219,24 +223,31 @@
         <div id="tabContent-live" class="tab-content space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Who Is Currently Inside Roster (2 cols) -->
-                <div class="lg:col-span-2 glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
-                    <div class="flex items-center justify-between mb-4">
+                <div class="lg:col-span-2 glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center font-bold">
                                 <i class="fa-solid fa-door-open"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-white text-base">Who Is Currently Inside Gate</h3>
-                                <p class="text-xs text-slate-400">Real-time roster of persons presently on-site with total duration</p>
+                                <h3 class="font-bold text-slate-900 text-base">Who Is Currently Inside Gate</h3>
+                                <p id="insideRosterSubtitle" class="text-xs text-slate-500">Real-time roster of persons presently on-site with total duration</p>
                             </div>
                         </div>
-                        <span id="insideCountBadge" class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold font-mono">0 Active</span>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button onclick="setLiveDateFilter('TODAY')" id="liveDateBtn-TODAY" class="live-date-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white border border-blue-600 shadow-sm transition-all">Today</button>
+                            <button onclick="setLiveDateFilter('YESTERDAY')" id="liveDateBtn-YESTERDAY" class="live-date-btn px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">Yesterday</button>
+                            <button onclick="setLiveDateFilter('TOMORROW')" id="liveDateBtn-TOMORROW" class="live-date-btn px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">Tomorrow</button>
+                            <button onclick="setLiveDateFilter('ALL')" id="liveDateBtn-ALL" class="live-date-btn px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">All Dates</button>
+                            <input type="date" id="liveRosterDateInput" onchange="setLiveDateFilter('CUSTOM', this.value)" class="py-1 px-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-mono focus:bg-white focus:outline-none">
+                            <span id="insideCountBadge" class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold font-mono">0 Active</span>
+                        </div>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto max-h-[520px] overflow-y-auto">
                         <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                            <thead class="sticky top-0 z-10 bg-slate-50">
+                                <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200 bg-slate-50/95">
                                     <th class="py-3 px-4">Person</th>
                                     <th class="py-3 px-4">Department / Role</th>
                                     <th class="py-3 px-4">First In</th>
@@ -245,25 +256,49 @@
                                     <th class="py-3 px-4">Time Spent Inside</th>
                                 </tr>
                             </thead>
-                            <tbody id="insideRosterTableBody" class="divide-y divide-slate-800/40">
-                                <tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">Loading on-site roster...</td></tr>
+                            <tbody id="insideRosterTableBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm">Loading on-site roster...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <!-- Live Gate Activity Timeline (1 col) -->
-                <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl flex flex-col">
-                    <div class="flex items-center justify-between mb-4">
+                <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-rss text-blue-400 text-sm"></i>
-                            <h3 class="font-bold text-white text-sm">Live Gate Feed</h3>
+                            <i class="fa-solid fa-rss text-blue-600 text-sm"></i>
+                            <h3 class="font-bold text-slate-900 text-sm">Live Gate Feed</h3>
+                            <span id="liveFeedCountBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">0 punches</span>
                         </div>
-                        <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Stream</span>
+                        <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-200">Stream</span>
                     </div>
+
+                    <!-- Date-Wise & Direction Filter Controls for Live Gate Feed -->
+                    <div class="mb-3 space-y-2 pb-3 border-b border-slate-100">
+                        <div class="flex flex-wrap items-center gap-1">
+                            <button onclick="setFeedDateFilter('TODAY')" id="feedDateBtn-TODAY" class="feed-date-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white border border-blue-600 shadow-sm transition-all">Today</button>
+                            <button onclick="setFeedDateFilter('YESTERDAY')" id="feedDateBtn-YESTERDAY" class="feed-date-btn px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">Yesterday</button>
+                            <button onclick="setFeedDateFilter('TOMORROW')" id="feedDateBtn-TOMORROW" class="feed-date-btn px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">Tomorrow</button>
+                            <button onclick="setFeedDateFilter('ALL')" id="feedDateBtn-ALL" class="feed-date-btn px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">All</button>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <input type="date" id="liveFeedDateInput" onchange="setFeedDateFilter('CUSTOM', this.value)" class="flex-1 py-1 px-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-mono focus:bg-white focus:outline-none">
+                            <select id="liveFeedGateSelect" onchange="fetchLiveGateFeed()" class="py-1 px-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700 font-semibold focus:bg-white focus:outline-none">
+                                <option value="ALL">All Gates</option>
+                                <option value="ENTRY">IN Only</option>
+                                <option value="EXIT">OUT Only</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-slate-400 text-[10px]"></i>
+                            <input type="text" id="liveFeedSearchInput" oninput="debounceLiveFeedSearch()" placeholder="Filter feed by name or ID..." class="w-full pl-7 pr-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none">
+                        </div>
+                    </div>
+
                     <div id="liveGateFeed" class="space-y-2.5 overflow-y-auto max-h-[420px] pr-1 flex-1">
-                        <!-- Filled dynamically by app.js WebSocket messages -->
-                        <div class="text-center py-10 text-slate-500 text-xs">Waiting for live biometric punches...</div>
+                        <!-- Filled dynamically by app.js on load and WebSocket messages -->
+                        <div class="text-center py-10 text-slate-400 text-xs">Loading gate feed...</div>
                     </div>
                 </div>
             </div>
@@ -273,26 +308,26 @@
         <!-- TAB 2: MOVEMENT FREQUENCY & DURATION ANALYTICS -->
         <!-- ============================================== -->
         <div id="tabContent-analytics" class="tab-content hidden space-y-4">
-            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white">
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <div>
-                        <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                            <i class="fa-solid fa-chart-user text-blue-400"></i>
+                        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-chart-user text-blue-600"></i>
                             <span>Movement Analysis: How Come / How Go / How Many Times</span>
                         </h3>
-                        <p class="text-xs text-slate-400 mt-1">Tracks how many times each person arrived and departed today, current location, and total hours on premises.</p>
+                        <p class="text-xs text-slate-500 mt-1">Tracks how many times each person arrived and departed today, current location, and total hours on premises.</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="fetchLivePresence('ALL')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">All</button>
-                        <button onclick="fetchLivePresence('INSIDE')" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-xs text-emerald-400 border border-emerald-500/30">Inside Only</button>
-                        <button onclick="fetchLivePresence('OUTSIDE')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-400 border border-slate-700">Outside Only</button>
+                        <button onclick="fetchLivePresence('ALL')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 border border-slate-200 font-semibold shadow-sm">All</button>
+                        <button onclick="fetchLivePresence('INSIDE')" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-xs text-emerald-700 border border-emerald-200 font-semibold shadow-sm">Inside Only</button>
+                        <button onclick="fetchLivePresence('OUTSIDE')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 border border-slate-200 font-semibold shadow-sm">Outside Only</button>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200 bg-slate-50/70">
                                 <th class="py-3 px-4">Person</th>
                                 <th class="py-3 px-4">Department</th>
                                 <th class="py-3 px-4">Current Location</th>
@@ -303,8 +338,8 @@
                                 <th class="py-3 px-4">Last Punch</th>
                             </tr>
                         </thead>
-                        <tbody id="activityRosterTableBody" class="divide-y divide-slate-800/40">
-                            <tr><td colspan="8" class="text-center py-8 text-slate-500 text-sm">Loading activity data...</td></tr>
+                        <tbody id="activityRosterTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="8" class="text-center py-8 text-slate-400 text-sm">Loading activity data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -315,52 +350,49 @@
         <!-- TAB 3: GATE ACCESS LOGS (ADMIN CAN REMOVE) -->
         <!-- ============================================== -->
         <div id="tabContent-logs" class="tab-content hidden space-y-4">
-            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white">
                 <!-- Filters Bar -->
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <div>
-                        <h3 class="font-bold text-white text-lg">Biometric Access Logs</h3>
-                        <p class="text-xs text-slate-400" id="totalLogsCount">0 Logs Found</p>
+                        <h3 class="font-bold text-slate-900 text-lg">Biometric Access Logs</h3>
+                        <p class="text-xs text-slate-500" id="totalLogsCount">0 Logs Found</p>
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-3">
                         <!-- Search -->
                         <div class="relative">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                             <input type="text" id="logsSearchInput" placeholder="Search person, ID, gate..." 
-                                   class="pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                   class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
                         </div>
 
                         <!-- Direction Filter -->
-                        <select id="logsGateFilter" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none">
+                        <select id="logsGateFilter" class="py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:bg-white focus:outline-none shadow-sm">
                             <option value="ALL">All Directions</option>
                             <option value="ENTRY">Gate 1 - ENTRY</option>
                             <option value="EXIT">Gate 2 - EXIT</option>
                         </select>
 
-                        <!-- Date Filter -->
-                        <input type="date" id="logsDateFilter" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none">
+                        <!-- Quick Date Buttons + Date Filter -->
+                        <div class="flex items-center gap-1">
+                            <button onclick="setLogsQuickDate('TODAY')" class="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold">Today</button>
+                            <button onclick="setLogsQuickDate('YESTERDAY')" class="px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">Yesterday</button>
+                            <button onclick="setLogsQuickDate('TOMORROW')" class="px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">Tomorrow</button>
+                            <button onclick="setLogsQuickDate('ALL')" class="px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">All</button>
+                        </div>
+                        <input type="date" id="logsDateFilter" class="py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:bg-white focus:outline-none shadow-sm">
 
                         <!-- Export CSV -->
-                        <a href="/api/logs/export" class="py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 font-semibold flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-csv text-emerald-400"></i> Export CSV
+                        <a href="/api/logs/export" class="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 border border-slate-200 font-semibold flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-csv text-emerald-600"></i> Export CSV
                         </a>
-                    </div>
-                </div>
-
-                <!-- User Search Filter Bar -->
-                <div class="mb-4">
-                    <div class="relative max-w-sm">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-                        <input type="text" id="userSearchInput" oninput="filterUsersList(this.value)" placeholder="Search 148+ users by name, ID, role, or dept..." 
-                               class="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200 bg-slate-50/70">
                                 <th class="py-3 px-4">Log #</th>
                                 <th class="py-3 px-4">Person</th>
                                 <th class="py-3 px-4">Direction</th>
@@ -373,8 +405,8 @@
                                 {% endif %}
                             </tr>
                         </thead>
-                        <tbody id="logsTableBody" class="divide-y divide-slate-800/40">
-                            <tr><td colspan="8" class="text-center py-8 text-slate-500 text-sm">Loading logs...</td></tr>
+                        <tbody id="logsTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="8" class="text-center py-8 text-slate-400 text-sm">Loading logs...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -385,18 +417,18 @@
         <!-- TAB 4: USER DIRECTORY & MANAGEMENT -->
         <!-- ============================================== -->
         <div id="tabContent-users" class="tab-content hidden space-y-4">
-            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white">
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h3 class="font-bold text-white text-lg">Registered Users & Bio IDs</h3>
-                        <p class="text-xs text-slate-400" id="totalUsersCount">0 Users</p>
+                        <h3 class="font-bold text-slate-900 text-lg">Registered Users & Bio IDs</h3>
+                        <p class="text-xs text-slate-500" id="totalUsersCount">0 Users</p>
                     </div>
                     {% if is_admin %}
                     <div class="flex items-center gap-2 flex-wrap justify-end">
                         <!-- Auto-Enroll Machine Pins -->
                         <button onclick="populateEnrolledPins(1, 120)" 
                                 title="Automatically create directory cards for all machine biometric IDs (e.g. 1 to 120)"
-                                class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all">
+                                class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                             <span>Enroll Machine IDs (1-120+)</span>
                         </button>
@@ -404,52 +436,52 @@
                         <!-- Import Machine USB File -->
                         <input type="file" id="userCsvFileInput" accept=".csv, .txt, .dat, .xls, .xlsx" class="hidden" onchange="handleUploadUserFile(this)">
                         <button onclick="document.getElementById('userCsvFileInput').click()" title="Import users and real names from USB pen drive file (user.dat, attlog.dat, CSV)"
-                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all">
-                            <i class="fa-brands fa-usb text-amber-400"></i>
+                                class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa-brands fa-usb text-amber-500"></i>
                             <span>Import USB File</span>
                         </button>
 
                         <!-- Direct Hardware Sync Gate 1 -->
-                        <button onclick="promptSyncDevice('entry_gate', 'Gate 1 (CP PLUS - 192.168.1.165)')" 
+                        <button onclick="promptSyncDevice('entry_gate', 'Gate 1 (Secureye - 192.168.1.224)')" 
                                 title="Download enrolled users with names directly from Gate 1 hardware"
-                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all">
-                            <i class="fa-solid fa-cloud-arrow-down text-blue-400"></i>
-                            <span>Sync 165</span>
+                                class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-down text-blue-600"></i>
+                            <span>Sync 224</span>
                         </button>
 
                         <!-- Direct Hardware Sync Gate 2 -->
-                        <button onclick="promptSyncDevice('exit_gate', 'Gate 2 (Secureye - 192.168.1.224)')" 
+                        <button onclick="promptSyncDevice('exit_gate', 'Gate 2 (CP PLUS - 192.168.1.165)')" 
                                 title="Download enrolled users directly from Gate 2 hardware"
-                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all">
-                            <i class="fa-solid fa-cloud-arrow-down text-emerald-400"></i>
-                            <span>Sync 224</span>
+                                class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 flex items-center gap-1.5 transition-all shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-down text-emerald-600"></i>
+                            <span>Sync 165</span>
                         </button>
 
                         <!-- Clear Non-Machine Data -->
                         <button onclick="confirmClearAllUsers()" title="Wipe user roster so only freshly synced biometric machine users remain"
-                                class="px-2.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-xl flex items-center gap-1 transition-all">
+                                class="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl flex items-center gap-1 transition-all shadow-sm">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                             <span>Clear Roster</span>
                         </button>
                     </div>
                     {% else %}
-                    <span class="text-xs text-slate-500 italic"><i class="fa-solid fa-lock text-slate-600 mr-1"></i> Admin manages users</span>
+                    <span class="text-xs text-slate-500 italic"><i class="fa-solid fa-lock text-slate-400 mr-1"></i> Admin manages users</span>
                     {% endif %}
                 </div>
 
                 <!-- User Search Filter Bar -->
                 <div class="mb-4">
                     <div class="relative max-w-sm">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-                        <input type="text" id="userSearchInput" oninput="filterUsersList(this.value)" placeholder="Search 148+ users by name, ID, role, or dept..." 
-                               class="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="userSearchInput" oninput="filterUsersList(this.value)" placeholder="Search users by name, ID, role, or dept..." 
+                               class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200 bg-slate-50/70">
                                 <th class="py-3 px-4">Biometric ID</th>
                                 <th class="py-3 px-4">Full Name</th>
                                 <th class="py-3 px-4">Role Title</th>
@@ -460,8 +492,8 @@
                                 {% endif %}
                             </tr>
                         </thead>
-                        <tbody id="usersTableBody" class="divide-y divide-slate-800/40">
-                            <tr><td colspan="6" class="text-center py-8 text-slate-500 text-sm">Loading users...</td></tr>
+                        <tbody id="usersTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm">Loading users...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -472,14 +504,14 @@
         <!-- TAB 5: BIOMETRIC DEVICES (BIO S-B251CB) -->
         <!-- ============================================== -->
         <div id="tabContent-devices" class="tab-content hidden space-y-6">
-            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white">
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                            <i class="fa-solid fa-microchip text-indigo-400"></i>
+                        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-microchip text-indigo-600"></i>
                             <span>Dual Biometric Devices (Bio S-B251CB)</span>
                         </h3>
-                        <p class="text-xs text-slate-400">Controls Gate 1 (Entry) & Gate 2 (Exit) terminals over TCP port 4370 or ADMS push.</p>
+                        <p class="text-xs text-slate-500">Controls Gate 1 (Entry) & Gate 2 (Exit) terminals over TCP port 4370 or ADMS push.</p>
                     </div>
                 </div>
 
@@ -493,33 +525,34 @@
         <!-- TAB 6: MONTHLY & YEARLY GATE OPEN & CLOSE MOVEMENTS -->
         <!-- ============================================== -->
         <div id="tabContent-monthly" class="tab-content hidden space-y-6">
-            <div class="glass-panel rounded-3xl p-6 border border-slate-800/80 shadow-2xl">
+            <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white">
                 <!-- Filters Bar -->
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <div>
-                        <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                            <i class="fa-solid fa-door-open text-amber-400"></i>
+                        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-door-open text-blue-600"></i>
                             <span>Monthly & Yearly Gate Open & Close Movement Report</span>
                         </h3>
-                        <p class="text-xs text-slate-400">Detailed historical record of when the gate opened and closed: all entries (IN), exits (OUT), gate trip frequency, and duration inside.</p>
+                        <p class="text-xs text-slate-500">Detailed historical record of when the gate opened and closed: all entries (IN), exits (OUT), gate trip frequency, and duration inside.</p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
                         <!-- Year Selector -->
                         <div class="flex items-center gap-1.5">
-                            <label class="text-xs text-slate-400 font-semibold uppercase">Year:</label>
-                            <select id="reportYearSelect" onchange="fetchMonthlyReport()" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
+                            <label class="text-xs text-slate-600 font-semibold uppercase">Year:</label>
+                            <select id="reportYearSelect" onchange="fetchMonthlyReport()" class="py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:bg-white focus:outline-none shadow-sm">
                                 <option value="2027">2027</option>
                                 <option value="2026" selected>2026</option>
                                 <option value="2025">2025</option>
                                 <option value="2024">2024</option>
+                                <option value="2023">2023</option>                                 <option value="2022">2022</option>                                 <option value="2021">2021</option>                                 <option value="2020">2020</option>                                 <option value="2019">2019</option>                                 <option value="2018">2018</option>                                 <option value="2017">2017</option>                                 <option value="2016">2016</option>                                 <option value="2015">2015</option>
                             </select>
                         </div>
 
                         <!-- Month Selector -->
                         <div class="flex items-center gap-1.5">
-                            <label class="text-xs text-slate-400 font-semibold uppercase">Month:</label>
-                            <select id="reportMonthSelect" onchange="fetchMonthlyReport()" class="py-1.5 px-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none">
+                            <label class="text-xs text-slate-600 font-semibold uppercase">Month:</label>
+                            <select id="reportMonthSelect" onchange="fetchMonthlyReport()" class="py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:bg-white focus:outline-none shadow-sm">
                                 <option value="">Full Year (All Months)</option>
                                 <option value="1">January</option>
                                 <option value="2">February</option>
@@ -536,15 +569,25 @@
                             </select>
                         </div>
 
+                        <!-- Date / Quick Filter for Report -->
+                        <div class="flex items-center gap-1">
+                            <button onclick="setReportQuickDate('TODAY')" id="reportDateBtn-TODAY" class="report-date-btn px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">Today</button>
+                            <button onclick="setReportQuickDate('YESTERDAY')" id="reportDateBtn-YESTERDAY" class="report-date-btn px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">Yesterday</button>
+                            <button onclick="setReportQuickDate('TOMORROW')" id="reportDateBtn-TOMORROW" class="report-date-btn px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">Tomorrow</button>
+                            <button onclick="setReportQuickDate('MONTH')" id="reportDateBtn-MONTH" class="report-date-btn px-2.5 py-1.5 rounded-xl bg-blue-600 text-white border border-blue-600 text-xs font-bold shadow-sm">Month / Year</button>
+                            <button onclick="setReportQuickDate('ALL')" id="reportDateBtn-ALL" class="report-date-btn px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">All Time</button>
+                            <input type="date" id="reportDateInput" onchange="setReportQuickDate('CUSTOM', this.value)" class="py-1.5 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-mono focus:bg-white focus:outline-none shadow-sm">
+                        </div>
+
                         <!-- Search -->
                         <div class="relative">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                             <input type="text" id="reportSearchInput" oninput="debounceMonthlyReportSearch()" placeholder="Search person or ID..." 
-                                   class="pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                   class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
                         </div>
 
                         <!-- Export Button -->
-                        <button onclick="downloadReportCsv()" class="py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 transition-all">
+                        <button onclick="downloadReportCsv()" class="py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition-all">
                             <i class="fa-solid fa-file-excel"></i> Export Report (CSV)
                         </button>
                     </div>
@@ -552,21 +595,21 @@
 
                 <!-- Report Summary Stats -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
-                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Total IN (Gate Opened)</div>
-                        <div id="reportTotalIn" class="text-2xl font-black text-emerald-400 font-mono">0</div>
+                    <div class="glass-card rounded-2xl p-4 border border-slate-200/90 shadow-sm">
+                        <div class="text-slate-500 text-xs font-semibold uppercase mb-1">Total IN (Gate Opened)</div>
+                        <div id="reportTotalIn" class="text-2xl font-black text-emerald-600 font-mono">0</div>
                     </div>
-                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
-                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Total OUT (Gate Opened)</div>
-                        <div id="reportTotalOut" class="text-2xl font-black text-rose-400 font-mono">0</div>
+                    <div class="glass-card rounded-2xl p-4 border border-slate-200/90 shadow-sm">
+                        <div class="text-slate-500 text-xs font-semibold uppercase mb-1">Total OUT (Gate Opened)</div>
+                        <div id="reportTotalOut" class="text-2xl font-black text-rose-600 font-mono">0</div>
                     </div>
-                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
-                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Total Gate Trips</div>
-                        <div id="reportTotalTrips" class="text-2xl font-black text-blue-400 font-mono">0</div>
+                    <div class="glass-card rounded-2xl p-4 border border-slate-200/90 shadow-sm">
+                        <div class="text-slate-500 text-xs font-semibold uppercase mb-1">Total Gate Trips</div>
+                        <div id="reportTotalTrips" class="text-2xl font-black text-blue-600 font-mono">0</div>
                     </div>
-                    <div class="glass-card rounded-2xl p-4 border border-slate-800">
-                        <div class="text-slate-400 text-xs font-semibold uppercase mb-1">Active Users Logged</div>
-                        <div id="reportActiveUsers" class="text-2xl font-black text-amber-400 font-mono">0</div>
+                    <div class="glass-card rounded-2xl p-4 border border-slate-200/90 shadow-sm">
+                        <div class="text-slate-500 text-xs font-semibold uppercase mb-1">Active Users Logged</div>
+                        <div id="reportActiveUsers" class="text-2xl font-black text-indigo-600 font-mono">0</div>
                     </div>
                 </div>
 
@@ -574,7 +617,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200 bg-slate-50/70">
                                 <th class="py-3 px-4">Biometric ID</th>
                                 <th class="py-3 px-4">Person Name</th>
                                 <th class="py-3 px-4">Department / Role</th>
@@ -586,28 +629,261 @@
                                 <th class="py-3 px-4 text-right">In/Out History</th>
                             </tr>
                         </thead>
-                        <tbody id="monthlyReportTableBody" class="divide-y divide-slate-800/40">
-                            <tr><td colspan="9" class="text-center py-8 text-slate-500 text-sm">Select month/year to view gate open & close movements...</td></tr>
+                        <tbody id="monthlyReportTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="9" class="text-center py-8 text-slate-400 text-sm">Select month/year to view gate open & close movements...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
+        <!-- ============================================== -->
+        <!-- TAB 7: AI IP CAMERA & NO-BAG POLICY DETECTION  -->
+        <!-- ============================================== -->
+        <div id="tabContent-camera" class="tab-content hidden space-y-6">
+            <!-- Top Row: Live AI Stream (2 cols) + IP Camera Connection Config (1 col) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Live AI Camera Scanner & Feed -->
+                <div class="lg:col-span-2 glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                    <span>AI Gate Camera & Bag Policy Scanner</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-bold uppercase">No Bags Allowed In Office</span>
+                                </h3>
+                                <p class="text-xs text-slate-500">Scans persons & objects at the gate, detects Backpacks / Handbags / Suitcases, notes the employee's name, and records a video clip.</p>
+                            </div>
+                        </div>
+                        <span id="aiCameraStatusBadge" class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold font-mono">AI READY</span>
+                    </div>
+
+                    <!-- Video / MJPEG Viewport -->
+                    <div class="relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 aspect-video flex items-center justify-center">
+                        <img id="aiCameraStreamImg" src="/api/camera/mjpeg" alt="AI Camera Stream" class="w-full h-full object-contain">
+                        <video id="localWebcamVideo" autoplay playsinline muted class="hidden w-full h-full object-contain"></video>
+                        <div class="absolute top-3 right-3 flex items-center gap-2">
+                            <span id="aiMatchedPersonPill" class="px-3 py-1 rounded-full bg-slate-900/80 text-emerald-400 border border-emerald-500/40 text-xs font-mono font-semibold backdrop-blur-md">
+                                <i class="fa-solid fa-fingerprint mr-1"></i> Gate User: Matching...
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Scanner Action Toolbar -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="startIpCameraStream()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-play"></i> Connect IP Camera Stream
+                            </button>
+                            <button onclick="toggleBrowserWebcamScan()" id="btnBrowserWebcam" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-camera"></i> Use PC / Browser Camera
+                            </button>
+                            <input type="file" id="uploadScanFrameInput" accept="image/*" class="hidden" onchange="handleScanUploadedImage(this)">
+                            <button onclick="document.getElementById('uploadScanFrameInput').click()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-semibold text-xs flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-image text-blue-600"></i> Scan Photo
+                            </button>
+                        </div>
+                        <button onclick="triggerTestBagViolation()" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 flex items-center gap-1.5 transition-all" title="Test the AI Bag Detection, Biometric Name Matching, Snapshot & Video Clip Recorder">
+                            <i class="fa-solid fa-bell"></i> Simulate Bag Detection & Record Clip
+                        </button>
+                    </div>
+
+                    <!-- Live Detected Objects Bar -->
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-700 uppercase text-[11px]"><i class="fa-solid fa-eye text-blue-600 mr-1"></i>Live Objects Detected:</span>
+                            <div id="liveDetectedObjectsList" class="flex flex-wrap items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-mono text-[11px]">Scanning gate corridor...</span>
+                            </div>
+                        </div>
+                        <span class="text-[11px] text-slate-500 font-mono">YOLOv5n COCO-80 Engine</span>
+                    </div>
+                </div>
+
+                <!-- IP Camera Connection & LAN Discovery Panel -->
+                <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white flex flex-col justify-between space-y-4">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                    <i class="fa-solid fa-network-wired text-blue-600"></i>
+                                    <span>Connect IP Camera</span>
+                                </h3>
+                                <p class="text-xs text-slate-500">Select discovered LAN camera or enter RTSP details</p>
+                            </div>
+                            <button onclick="discoverLanCameras()" class="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-magnifying-glass"></i> Scan LAN
+                            </button>
+                        </div>
+
+                        <!-- Discovered LAN Cameras Dropdown -->
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Discovered Cameras on 192.168.1.x (RTSP 554)</label>
+                            <select id="discoveredCamerasSelect" onchange="selectDiscoveredCamera(this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:bg-white focus:outline-none">
+                                <option value="">-- Select a Discovered IP Camera --</option>
+                                <option value="192.168.1.164">192.168.1.164 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.165">192.168.1.165 (CP PLUS Gate 2 - RTSP 554)</option>
+                                <option value="192.168.1.166">192.168.1.166 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.168">192.168.1.168 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.169">192.168.1.169 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.170">192.168.1.170 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.171">192.168.1.171 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.172">192.168.1.172 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.173">192.168.1.173 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.174">192.168.1.174 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.110">192.168.1.110 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.111">192.168.1.111 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.112">192.168.1.112 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.113">192.168.1.113 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.114">192.168.1.114 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.115">192.168.1.115 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.116">192.168.1.116 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.117">192.168.1.117 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.119">192.168.1.119 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.120">192.168.1.120 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.121">192.168.1.121 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.122">192.168.1.122 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.123">192.168.1.123 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.124">192.168.1.124 (RTSP 554 / HTTP 80)</option>
+                                <option value="192.168.1.160">192.168.1.160 (RTSP 554)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="col-span-2">
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Camera IP</label>
+                                <input type="text" id="camIpInput" value="192.168.1.164" placeholder="192.168.1.164" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">RTSP Port</label>
+                                <input type="number" id="camPortInput" value="554" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Camera Brand</label>
+                                <select id="camBrandInput" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800">
+                                    <option value="cpplus">CP PLUS / Dahua</option>
+                                    <option value="hikvision">Hikvision / Secureye</option>
+                                    <option value="onvif">ONVIF Generic</option>
+                                    <option value="webcam">Local USB Webcam (0)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Camera Name</label>
+                                <input type="text" id="camNameInput" value="Gate 1 Entry IP Camera" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Username</label>
+                                <input type="text" id="camUserInput" value="admin" placeholder="admin" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Password</label>
+                                <div class="relative">
+                                    <input type="password" id="camPassInput" value="admin$2023" placeholder="admin$2023" class="w-full pl-3 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <button type="button" onclick="toggleCamPasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 hover:text-slate-700 transition-colors focus:outline-none" title="Show / Hide Password">
+                                        <i id="camPassEyeIcon" class="fa-solid fa-eye text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-600 mb-1">Custom RTSP / Stream URL (Optional)</label>
+                            <input type="text" id="camRtspUrlInput" placeholder="rtsp://admin:pass@192.168.1.164:554/cam/realmonitor?channel=1&subtype=0" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-mono text-slate-900">
+                        </div>
+                    </div>
+
+                    <button onclick="saveCameraConfig()" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-plug-circle-check"></i> Save & Connect IP Camera
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Bag Policy Violation Log (Employee Name + Snapshot + Video Clip) -->
+            <div class="glass-panel rounded-3xl p-6 border border-slate-200 shadow-sm bg-white">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                            <span>Office Bag Violation Log (Employee Name, Snapshot & Video Clip)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Automatically records any person bringing a bag (Backpack, Handbag, Briefcase) through the gate, matched with their Biometric ID & Name.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="setBagViolationDateFilter('TODAY')" id="bagDateBtn-TODAY" class="bag-date-btn px-2.5 py-1.5 rounded-xl bg-blue-600 text-white border border-blue-600 text-xs font-bold shadow-sm">Today</button>
+                        <button onclick="setBagViolationDateFilter('YESTERDAY')" id="bagDateBtn-YESTERDAY" class="bag-date-btn px-2.5 py-1.5 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold">Yesterday</button>
+                        <button onclick="setBagViolationDateFilter('TOMORROW')" id="bagDateBtn-TOMORROW" class="bag-date-btn px-2.5 py-1.5 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold">Tomorrow</button>
+                        <button onclick="setBagViolationDateFilter('ALL')" id="bagDateBtn-ALL" class="bag-date-btn px-2.5 py-1.5 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold">All Dates</button>
+                        <input type="date" id="bagViolationDateInput" onchange="setBagViolationDateFilter('CUSTOM', this.value)" class="py-1.5 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-700">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="bagViolationSearchInput" oninput="fetchBagViolations()" placeholder="Search employee or bag..." class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200 bg-slate-50/70">
+                                <th class="py-3 px-4">Snapshot</th>
+                                <th class="py-3 px-4">Employee Name & Bio ID</th>
+                                <th class="py-3 px-4">Detected Bag & Objects</th>
+                                <th class="py-3 px-4">Camera & Match Note</th>
+                                <th class="py-3 px-4">Date & Time</th>
+                                <th class="py-3 px-4 text-right">Video Clip / Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bagViolationsTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="text-center py-8 text-slate-400 text-sm">Loading bag detection records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Bag Violation Video Clip & Snapshot Viewer -->
+        <div id="bagMediaModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative text-slate-800 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div>
+                        <h4 id="bagMediaModalTitle" class="font-bold text-slate-900 text-base flex items-center gap-2">
+                            <i class="fa-solid fa-video text-rose-600"></i>
+                            <span>Bag Violation Evidence</span>
+                        </h4>
+                        <p id="bagMediaModalSubtitle" class="text-xs text-slate-500"></p>
+                    </div>
+                    <button onclick="closeBagMediaModal()" class="text-slate-400 hover:text-slate-700">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div id="bagMediaModalContent" class="rounded-2xl overflow-hidden bg-slate-950 flex items-center justify-center max-h-[65vh]"></div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Modal: User Detailed In/Out History -->
-    <div id="userHistoryModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+    <div id="userHistoryModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[85vh] flex flex-col text-slate-800">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                 <div>
-                    <h4 id="historyModalTitle" class="font-bold text-white text-base flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+                    <h4 id="historyModalTitle" class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-blue-600"></i>
                         <span>In/Out Movement Timeline</span>
                     </h4>
-                    <p id="historyModalSubtitle" class="text-xs text-slate-400">Daily coming and going times</p>
+                    <p id="historyModalSubtitle" class="text-xs text-slate-500">Daily coming and going times</p>
                 </div>
-                <button onclick="document.getElementById('userHistoryModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                <button onclick="document.getElementById('userHistoryModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -615,7 +891,7 @@
             <div class="overflow-y-auto flex-1 pr-1">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-800">
+                        <tr class="text-[11px] uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200 bg-slate-50/70">
                             <th class="py-2.5 px-3">Date</th>
                             <th class="py-2.5 px-3">First In</th>
                             <th class="py-2.5 px-3">Last Out</th>
@@ -624,7 +900,7 @@
                             <th class="py-2.5 px-3">Hours Inside</th>
                         </tr>
                     </thead>
-                    <tbody id="userHistoryTableBody" class="divide-y divide-slate-800/40 text-xs">
+                    <tbody id="userHistoryTableBody" class="divide-y divide-slate-100 text-xs">
                     </tbody>
                 </table>
             </div>
@@ -632,14 +908,14 @@
     </div>
 
     <!-- Modal: Edit User (Admin Only) -->
-    <div id="editUserModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-                <h4 class="font-bold text-white text-base flex items-center gap-2">
-                    <i class="fa-solid fa-user-pen text-blue-400"></i>
+    <div id="editUserModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-slate-800">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-blue-600"></i>
                     <span>Edit User Details</span>
                 </h4>
-                <button onclick="document.getElementById('editUserModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                <button onclick="document.getElementById('editUserModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -647,99 +923,99 @@
             <form id="editUserForm" onsubmit="handleSaveEditUser(event)" class="space-y-4">
                 <input type="hidden" id="editUserId">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Biometric Pin / ID</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Biometric Pin / ID</label>
                     <input type="text" id="editBioId" disabled 
-                           class="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-400 text-sm font-mono cursor-not-allowed">
+                           class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 text-sm font-mono cursor-not-allowed">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
                     <input type="text" id="editName" required placeholder="Full Name" 
-                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Department</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Department</label>
                         <input type="text" id="editDept" placeholder="Department" 
-                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Role Title</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Role Title</label>
                         <input type="text" id="editRole" placeholder="Role" 
-                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Phone Number (Optional)</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Phone Number (Optional)</label>
                     <input type="text" id="editPhone" placeholder="Phone" 
-                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="document.getElementById('editUserModal').classList.add('hidden')" 
-                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30">Update User</button>
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20">Update User</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal: Add User (Admin Only) -->
-    <div id="addUserModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-                <h4 class="font-bold text-white text-base">Add User to Biometric Gate</h4>
-                <button onclick="document.getElementById('addUserModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+    <div id="addUserModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-slate-800">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h4 class="font-bold text-slate-900 text-base">Add User to Biometric Gate</h4>
+                <button onclick="document.getElementById('addUserModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <form id="addUserForm" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Biometric Pin / ID</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Biometric Pin / ID</label>
                     <input type="text" id="newBioId" required placeholder="e.g. 106" 
-                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
                     <input type="text" id="newName" required placeholder="e.g. Karan Roy" 
-                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Department</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Department</label>
                         <input type="text" id="newDept" placeholder="e.g. Operations" 
-                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Role Title</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Role Title</label>
                         <input type="text" id="newRole" placeholder="e.g. Staff" 
-                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Phone Number (Optional)</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Phone Number (Optional)</label>
                     <input type="text" id="newPhone" placeholder="+91 98765 00000" 
-                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="document.getElementById('addUserModal').classList.add('hidden')" 
-                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30">Save User</button>
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20">Save User</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal: Device IP Config (Admin Only) -->
-    <div id="deviceConfigModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-                <h4 class="font-bold text-white text-base flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-amber-400"></i>
-                    <span>Configure Bio S-B251CB</span>
+    <div id="deviceConfigModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-slate-800">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-blue-600"></i>
+                    <span>Configure Biometric Hardware</span>
                 </h4>
-                <button onclick="document.getElementById('deviceConfigModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                <button onclick="document.getElementById('deviceConfigModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -747,25 +1023,25 @@
             <form id="deviceConfigForm" onsubmit="handleSaveDeviceConfig(event)" class="space-y-4">
                 <input type="hidden" id="cfgDeviceKey">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Device Name</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Device Name</label>
                     <input type="text" id="cfgDeviceName" required 
-                           class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                           class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">IP Address</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">IP Address</label>
                         <input type="text" id="cfgIp" required placeholder="192.168.1.201" 
-                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Port</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Port</label>
                         <input type="number" id="cfgPort" required value="4370" 
-                               class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Gate Direction</label>
-                    <select id="cfgGateType" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Gate Direction</label>
+                    <select id="cfgGateType" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="ENTRY">ENTRY (Gate 1 - Entry Gate)</option>
                         <option value="EXIT">EXIT (Gate 2 - Exit Gate)</option>
                     </select>
@@ -773,8 +1049,8 @@
 
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="document.getElementById('deviceConfigModal').classList.add('hidden')" 
-                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-600/30">Save Settings</button>
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20">Save Settings</button>
                 </div>
             </form>
         </div>
@@ -784,6 +1060,6 @@
     <div id="toastContainer"></div>
 
     <!-- Scripts -->
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.js?v=20261111e"></script>
 </body>
 </html>

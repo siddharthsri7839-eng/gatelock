@@ -446,11 +446,15 @@ class BiometricManager:
 
         try:
             if not punch_time:
-                punch_time = datetime.datetime.utcnow()
+                punch_time = datetime.datetime.now()
 
-            # Find matching user profile (supports exact pin, numeric prefix, and VHPL codes)
+            # Find matching user profile (supports exact pin, G1-pin, numeric prefix, and VHPL codes)
             clean_pin = str(bio_user_id).strip()
-            user = db.query(User).filter(User.bio_user_id == clean_pin).first()
+            user = None
+            if gate_type.upper() == "ENTRY" and not clean_pin.startswith("G1-"):
+                user = db.query(User).filter(User.bio_user_id == f"G1-{clean_pin}").first()
+            if not user:
+                user = db.query(User).filter(User.bio_user_id == clean_pin).first()
             if not user and clean_pin.isdigit():
                 # Try matching VHPL001 format
                 vhpl_code = f"VHPL{int(clean_pin):03d}"
@@ -479,26 +483,34 @@ class BiometricManager:
             dev = db.query(DeviceSetting).filter(DeviceSetting.device_key == device_key).first()
             dev_name = dev.name if dev else f"Gate {gate_type.upper()} Terminal"
 
-            # Create gate log
-            log = GateLog(
-                bio_user_id=user.bio_user_id,
-                user_id=user.id,
-                user_name=user.name,
-                device_key=device_key,
-                device_name=dev_name,
-                gate_type=gate_type.upper(),
-                timestamp=punch_time,
-                verify_mode=verify_mode,
-                status="SUCCESS",
-                is_deleted=False,
-                note=note
-            )
-            db.add(log)
-            db.commit()
-            db.refresh(log)
+            # Check if exact log already exists (avoid duplicate rows on live push + DB sync)
+            log = db.query(GateLog).filter(
+                GateLog.bio_user_id == user.bio_user_id,
+                GateLog.timestamp == punch_time,
+                GateLog.gate_type == gate_type.upper(),
+                GateLog.is_deleted == False
+            ).first()
+
+            if not log:
+                log = GateLog(
+                    bio_user_id=user.bio_user_id,
+                    user_id=user.id,
+                    user_name=user.name,
+                    device_key=device_key,
+                    device_name=dev_name,
+                    gate_type=gate_type.upper(),
+                    timestamp=punch_time,
+                    verify_mode=verify_mode,
+                    status="SUCCESS",
+                    is_deleted=False,
+                    note=note
+                )
+                db.add(log)
+                db.commit()
+                db.refresh(log)
 
             # Compute updated daily presence metrics for broadcast
-            today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
             today_punches = db.query(GateLog).filter(
                 GateLog.bio_user_id == user.bio_user_id,
                 GateLog.timestamp >= today_start,
